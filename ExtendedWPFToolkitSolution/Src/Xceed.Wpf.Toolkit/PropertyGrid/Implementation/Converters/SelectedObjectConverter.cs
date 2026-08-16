@@ -74,6 +74,13 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid.Converters
       if( value == null )
         return string.Empty;
 
+      // TypeDescriptor.GetClassName(object) honors ICustomTypeDescriptor (so a XAML element
+      // adapter reports "Button" instead of its own raw adapter type) and falls back to the
+      // runtime type name for plain objects.
+      var className = TypeDescriptor.GetClassName( value );
+      if( !string.IsNullOrEmpty( className ) )
+        return className;
+
       Type newType = value.GetType();
 
       //ICustomTypeProvider is only available in .net 4.5 and over. Use reflection so the .net 4.0 and .net 3.5 still works.
@@ -94,6 +101,13 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid.Converters
     {
       if( value == null )
         return String.Empty;
+
+      // Honors ICustomTypeDescriptor.GetComponentName (e.g. the element's x:Name for a XAML
+      // element adapter); plain objects without a custom descriptor fall through to the
+      // reflection-based Name-property lookup below.
+      var componentName = TypeDescriptor.GetComponentName( value );
+      if( !string.IsNullOrEmpty( componentName ) )
+        return componentName;
 
       Type newType = value.GetType();
       PropertyInfo[] properties = newType.GetProperties();

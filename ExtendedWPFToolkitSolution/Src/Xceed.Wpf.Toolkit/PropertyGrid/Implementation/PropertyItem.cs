@@ -37,6 +37,30 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
   {
     #region Properties
 
+    #region IsDefaultValue
+
+    /// <summary>
+    /// Whether the property currently holds its default value. Drives the VS-style override
+    /// indicator dot in the row template: a value the descriptor can reset (CanResetValue)
+    /// has been changed from its default and shows a filled dot.
+    /// </summary>
+    public static readonly DependencyProperty IsDefaultValueProperty =
+        DependencyProperty.Register( "IsDefaultValue", typeof( bool ), typeof( PropertyItem ), new UIPropertyMetadata( true ) );
+
+    public bool IsDefaultValue
+    {
+      get { return ( bool )GetValue( IsDefaultValueProperty ); }
+      set { SetValue( IsDefaultValueProperty, value ); }
+    }
+
+    internal void UpdateDefaultState()
+    {
+      var canReset = ( this.DescriptorDefinition != null ) && this.DescriptorDefinition.CanResetValue;
+      this.SetCurrentValue( PropertyItem.IsDefaultValueProperty, !canReset );
+    }
+
+    #endregion //IsDefaultValue
+
     #region IsReadOnly
 
     /// <summary>
@@ -212,6 +236,8 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
         this.SetCurrentValue( PropertyItem.ValueProperty, this.DescriptorDefinition.DefaultValue );
 #endif
       }
+
+      this.UpdateDefaultState();
     }
 
     #endregion
@@ -316,6 +342,7 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
       : base( definition.IsPropertyGridCategorized, !definition.PropertyType.IsArray )
     {
       this.Init( definition );
+      this.UpdateDefaultState();
     }
 
     #endregion //Constructors

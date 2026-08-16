@@ -48,6 +48,9 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
     private bool _hasPendingSelectedObjectChanged;
     private int _initializationCount;
     private ContainerHelperBase _containerHelper;
+    private readonly ObservableCollection<EventItem> _events = new ObservableCollection<EventItem>();
+    private readonly List<EventItem> _allEvents = new List<EventItem>();
+    private IPropertyGridEventSource _eventSource;
     private WeakEventListener<NotifyCollectionChangedEventArgs> _propertyDefinitionsListener;
     private WeakEventListener<NotifyCollectionChangedEventArgs> _editorDefinitionsListener;
 
@@ -211,13 +214,16 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
       // The Filter property affects the resulting FilterInfo of IPropertyContainer. Raise an event corresponding
       // to this property.
       this.Notify( this.PropertyChanged, () => ( ( IPropertyContainer )this ).FilterInfo );
+
+      // The search box also filters the Events view (name/handler), same as the UnoPropertyGrid design.
+      this.RefreshEventsFilter();
     }
 
     #endregion //Filter
 
     #region FilterWatermark
 
-    public static readonly DependencyProperty FilterWatermarkProperty = DependencyProperty.Register( "FilterWatermark", typeof( string ), typeof( PropertyGrid ), new UIPropertyMetadata( "Search" ) );
+    public static readonly DependencyProperty FilterWatermarkProperty = DependencyProperty.Register( "FilterWatermark", typeof( string ), typeof( PropertyGrid ), new UIPropertyMetadata( "Search properties" ) );
     public string FilterWatermark
     {
       get
@@ -395,7 +401,7 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
     protected virtual void OnNameColumnWidthChanged( double oldValue, double newValue )
     {
       if( _dragThumb != null )
-        ( ( TranslateTransform )_dragThumb.RenderTransform ).X = newValue;
+        this.UpdateThumb();
     }
 
     #endregion //NameColumnWidth
@@ -585,6 +591,113 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
     }
 
     #endregion //SelectedObject
+
+    #region Events
+
+    /// <summary>
+    /// The design-time events of the current <see cref="SelectedObject"/>, shown when
+    /// <see cref="ViewMode"/> is <see cref="PropertyGridMode.Events"/>. Populated from
+    /// <c>TypeDescriptor.GetEvents</c>, so ICustomTypeDescriptor-backed adapters can supply
+    /// their events without real CLR wiring.
+    /// </summary>
+    public IList Events
+    {
+      get { return _events; }
+    }
+
+    public static readonly DependencyProperty ViewModeProperty = DependencyProperty.Register( "ViewMode", typeof( PropertyGridMode ), typeof( PropertyGrid ), new UIPropertyMetadata( PropertyGridMode.Properties, OnViewModeChanged ) );
+    public PropertyGridMode ViewMode
+    {
+      get
+      {
+        return ( PropertyGridMode )GetValue( ViewModeProperty );
+      }
+      set
+      {
+        SetValue( ViewModeProperty, value );
+      }
+    }
+
+    /// <summary>Whether the Properties/Events view toggle is shown in the toolbar (default true).</summary>
+    public static readonly DependencyProperty ShowViewToggleProperty = DependencyProperty.Register( "ShowViewToggle", typeof( bool ), typeof( PropertyGrid ), new UIPropertyMetadata( true ) );
+    public bool ShowViewToggle
+    {
+      get
+      {
+        return ( bool )GetValue( ShowViewToggleProperty );
+      }
+      set
+      {
+        SetValue( ShowViewToggleProperty, value );
+      }
+    }
+
+    private static void OnViewModeChanged( DependencyObject o, DependencyPropertyChangedEventArgs e )
+    {
+      PropertyGrid propertyGrid = o as PropertyGrid;
+      if( propertyGrid != null )
+        propertyGrid.OnViewModeChanged( ( PropertyGridMode )e.OldValue, ( PropertyGridMode )e.NewValue );
+    }
+
+    private void OnViewModeChanged( PropertyGridMode oldValue, PropertyGridMode newValue )
+    {
+      // Contextual search placeholder, mirroring the UnoPropertyGrid design: the watermark
+      // announces what the search box currently filters.
+      this.FilterWatermark = newValue == PropertyGridMode.Events ? "Search events" : "Search properties";
+      this.Notify( this.PropertyChanged, () => this.ViewMode );
+    }
+
+    private void PopulateEvents()
+    {
+      _allEvents.Clear();
+      _eventSource = SelectedObject as IPropertyGridEventSource;
+
+      if( SelectedObject != null )
+      {
+        foreach( EventDescriptor eventDescriptor in TypeDescriptor.GetEvents( SelectedObject ) )
+        {
+          var item = new EventItem( new PropertyGridEventDescriptor( eventDescriptor ) );
+          item.Source = _eventSource;
+          if( _eventSource != null )
+          {
+            var handlerName = _eventSource.GetEventHandler( eventDescriptor.Name );
+            if( !string.IsNullOrEmpty( handlerName ) )
+              item.LoadHandlerName( handlerName );
+          }
+          _allEvents.Add( item );
+        }
+      }
+
+      RefreshEventsFilter();
+    }
+
+    /// <summary>
+    /// Re-applies the search box filter to the events list (matching name, display name or
+    /// handler name, case-insensitive), mirroring the UnoPropertyGrid search behavior.
+    /// </summary>
+    void RefreshEventsFilter()
+    {
+      _events.Clear();
+      var filter = this.Filter;
+      if( string.IsNullOrEmpty( filter ) )
+      {
+        foreach( var item in _allEvents )
+          _events.Add( item );
+        return;
+      }
+
+      foreach( var item in _allEvents )
+      {
+        if( item.Name.IndexOf( filter, StringComparison.CurrentCultureIgnoreCase ) >= 0
+          || item.DisplayName.IndexOf( filter, StringComparison.CurrentCultureIgnoreCase ) >= 0
+          || item.HandlerName.IndexOf( filter, StringComparison.CurrentCultureIgnoreCase ) >= 0 )
+        {
+          _events.Add( item );
+        }
+      }
+    }
+
+    #endregion //Events
 
     #region SelectedObjectType
 
@@ -923,25 +1036,20 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
         _dragThumb.DragDelta -= DragThumb_DragDelta;
       _dragThumb = GetTemplateChild( PART_DragThumb ) as Thumb;
       if( _dragThumb != null )
+      {
+        // Thumb.DragDelta relies on the OS-style drag/capture plumbing that LibreWPF does not
+        // bridge (measured: dragging the name-column handle never fired DragDelta, so the
+        // column could not be resized at all). Drive the resize from plain mouse events instead
+        // - the down handler lives on the thumb, the move/up handlers on the grid itself (see
+        // HookNameColumnDragHandlers).
         _dragThumb.DragDelta += DragThumb_DragDelta;
+        _dragThumb.PreviewMouseLeftButtonDown += DragThumb_PreviewMouseLeftButtonDown;
+        this.HookNameColumnDragHandlers();
+      }
 
       if( _containerHelper != null )
       {
         _containerHelper.ChildrenItemsControl = GetTemplateChild( PART_PropertyItemsControl ) as PropertyItemsControl;
-      }
-
-      //Update TranslateTransform in code-behind instead of XAML to remove the
-      //output window error.
-      //When we use FindAncesstor in custom control template for binding internal elements property 
-      //into its ancestor element, Visual Studio displays data warning messages in output window when 
-      //binding engine meets unmatched target type during visual tree traversal though it does the proper 
-      //binding when it receives expected target type during visual tree traversal
-      //ref : http://www.codeproject.com/Tips/124556/How-to-suppress-the-System-Windows-Data-Error-warn
-      TranslateTransform _moveTransform = new TranslateTransform();
-      _moveTransform.X = NameColumnWidth;
-      if( _dragThumb != null )
-      {
-        _dragThumb.RenderTransform = _moveTransform;
       }
 
       this.UpdateThumb();
@@ -1019,6 +1127,142 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
     {
       NameColumnWidth = Math.Min( Math.Max( this.ActualWidth * 0.1, NameColumnWidth + e.HorizontalChange ), this.ActualWidth * 0.9 );
     }
+
+    #region Manual name-column drag (LibreWPF: Thumb.DragDelta never fires)
+
+    bool _isResizingNameColumn;
+    Point _nameColumnResizeStart;
+    double _nameColumnResizeStartWidth;
+    bool _nameColumnDragHandlersHooked;
+    FrameworkElement _resizeLine;
+    bool _resizeLineNear;
+
+    void HookNameColumnDragHandlers()
+    {
+      if( _nameColumnDragHandlersHooked )
+        return;
+      _nameColumnDragHandlersHooked = true;
+      // The resize is driven by grid-level mouse events, not the thumb: LibreWPF's hit testing
+      // never routes input to the thumb overlay (it only serves as the hover visual now).
+      this.PreviewMouseLeftButtonDown += Grid_PreviewMouseLeftButtonDown;
+      this.PreviewMouseMove += Grid_PreviewMouseMove;
+      this.PreviewMouseLeftButtonUp += Grid_PreviewMouseLeftButtonUp;
+      this.MouseLeave += Grid_MouseLeave;
+      if( _dragThumb != null )
+        _resizeLine = _dragThumb.Template?.FindName( "PART_ResizeLine", _dragThumb ) as FrameworkElement;
+    }
+
+    void DragThumb_PreviewMouseLeftButtonDown( object sender, MouseButtonEventArgs e )
+    {
+      Grid_PreviewMouseLeftButtonDown( this, e );
+    }
+
+    /// <summary>
+    /// The name/value column boundary in this grid's coordinates. The rows are indented inside
+    /// category expanders (10px), so the boundary is NOT simply NameColumnWidth - measure the
+    /// first row's actual left edge instead.
+    /// </summary>
+    double NameColumnBoundaryX()
+    {
+      var itemsControl = _containerHelper?.ChildrenItemsControl;
+      if( itemsControl != null )
+      {
+        try
+        {
+          var firstRow = TreeHelper.FindChild<PropertyItemBase>( itemsControl );
+          if( firstRow != null )
+          {
+            var left = firstRow.TranslatePoint( new Point( 0, 0 ), this ).X;
+            if( left >= 0 && left < this.ActualWidth )
+              return left + NameColumnWidth;
+          }
+        }
+        catch
+        {
+        }
+      }
+      // Measurement unavailable (e.g. events view, where the properties list is collapsed):
+      // fall back to the categorized rows' known 10px expander indent.
+      return NameColumnWidth + 10;
+    }
+
+    void Grid_PreviewMouseLeftButtonDown( object sender, MouseButtonEventArgs e )
+    {
+      if( _isResizingNameColumn )
+        return;
+      // Start the resize when the press lands within the boundary band of the name column
+      // (the same band the drag thumb visually marks). The grid always receives the tunneling
+      // preview event, so this works regardless of LibreWPF's hit-testing quirks; presses
+      // elsewhere fall through to the rows/editors normally.
+      var position = e.GetPosition( this );
+      if( Math.Abs( position.X - NameColumnBoundaryX() ) <= 5 )
+      {
+        _isResizingNameColumn = true;
+        _nameColumnResizeStart = position;
+        _nameColumnResizeStartWidth = NameColumnWidth;
+        try
+        {
+          // Capture on the grid itself (not the thumb) so releasing on the grid is symmetric -
+          // a capture left behind on the thumb permanently hijacks mouse input for the whole pad.
+          this.CaptureMouse();
+          Console.WriteLine( "[PropertyGrid] name-column drag: started at x=" + position.X + ", boundary=" + NameColumnBoundaryX() + ", captured=" + Mouse.Captured );
+        }
+        catch( Exception ex )
+        {
+          Console.WriteLine( "[PropertyGrid] name-column drag: CaptureMouse failed: " + ex.Message );
+        }
+        e.Handled = true;
+      }
+    }
+
+    void Grid_PreviewMouseMove( object sender, MouseEventArgs e )
+    {
+      var position = e.GetPosition( this );
+      if( !_isResizingNameColumn )
+      {
+        // Not dragging: drive the hover line's visibility from proximity to the column
+        // boundary (same band as the drag start) - the thumb itself is never hit-testable
+        // on LibreWPF, so its IsMouseOver cannot drive the visual.
+        var near = Math.Abs( position.X - NameColumnBoundaryX() ) <= 5;
+        if( near != _resizeLineNear )
+        {
+          _resizeLineNear = near;
+          if( _resizeLine != null )
+            _resizeLine.Opacity = near ? 1 : 0;
+        }
+        return;
+      }
+      var delta = position.X - _nameColumnResizeStart.X;
+      if( delta != 0 )
+        Console.WriteLine( "[PropertyGrid] name-column drag: move dx=" + delta );
+      NameColumnWidth = Math.Min( Math.Max( this.ActualWidth * 0.1, _nameColumnResizeStartWidth + delta ), this.ActualWidth * 0.9 );
+      e.Handled = true;
+    }
+
+    void Grid_MouseLeave( object sender, MouseEventArgs e )
+    {
+      _resizeLineNear = false;
+      if( _resizeLine != null )
+        _resizeLine.Opacity = 0;
+    }
+
+    void Grid_PreviewMouseLeftButtonUp( object sender, MouseButtonEventArgs e )
+    {
+      if( !_isResizingNameColumn )
+        return;
+      Console.WriteLine( "[PropertyGrid] name-column drag: MouseUp" );
+      _isResizingNameColumn = false;
+      try
+      {
+        ReleaseMouseCapture();
+      }
+      catch
+      {
+      }
+      e.Handled = true;
+    }
+
+    #endregion //Manual name-column drag
 
 
     private void PropertyGrid_PropertyValueChanged( object sender, PropertyValueChangedEventArgs e )
@@ -1187,6 +1431,8 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
       objectContainerHelper = new ObjectContainerHelper( this, SelectedObject );
       objectContainerHelper.ObjectsGenerated += this.ObjectContainerHelper_ObjectsGenerated;
       objectContainerHelper.GenerateProperties();
+
+      this.PopulateEvents();
     }
 
     private void FinalizeUpdateContainerHelper( ItemsControl childrenItemsControl )
@@ -1224,10 +1470,11 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
     {
       if( _dragThumb != null )
       {
-      if( IsCategorized )
-        _dragThumb.Margin = new Thickness( 6, 0, 0, 0 );
-      else
-        _dragThumb.Margin = new Thickness( -1, 0, 0, 0 );
+        // Position the handle at the name/value column boundary with Margin, not a
+        // RenderTransform: LibreWPF's hit testing ignores render transforms (measured - the
+        // handle rendered at the boundary but was only clickable at its untransformed spot).
+        // Offset -6 centers the 2px grab line on the boundary (thumb is 12px wide).
+        _dragThumb.Margin = new Thickness( NameColumnBoundaryX() - 6, 0, 0, 0 );
       }
     }
 

@@ -1,4 +1,4 @@
-﻿<!--***********************************************************************************
+<!--***********************************************************************************
 
    Toolkit for WPF
 
@@ -49,8 +49,83 @@
   <pgconv:IsDefaultCategoryConverter x:Key="IsDefaultCategoryConverter" />
   <pgconv:SelectedObjectConverter x:Key="objectConverter" />
   <pgconv:PropertyItemEditorConverter x:Key="PropertyItemEditorConverter" />
+  <pgconv:EnumToBoolConverter x:Key="EnumToBoolConverter" />
+  <pgconv:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter" />
+  <pgconv:DefaultValueToBrushConverter x:Key="DefaultValueToBrushConverter" />
 
-  <x:Static x:Key="EmptyString"
+  <DataTemplate x:Key="EventItemTemplate">
+    <Border Background="{x:Static SystemColors.WindowBrush}"
+            Margin="0,0,0,1">
+      <!-- 10px left indent matching the properties rows' category-expander padding, so the
+           name column aligns between the two views. -->
+      <Grid Margin="10,0,0,0"
+            VerticalAlignment="Stretch"
+            HorizontalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="{Binding NameColumnWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pg:PropertyGrid}}}" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+        </Grid.ColumnDefinitions>
+
+        <Border Background="{x:Static SystemColors.WindowBrush}"
+                BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
+                BorderThickness="0,0,1,0"
+                Margin="0,0,1,0"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch"
+                ToolTip="{Binding Description}">
+          <Grid Margin="4,2,2,2"
+                VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="{Binding DisplayName}"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" />
+            <TextBlock Grid.Column="1"
+                       Margin="4,0,0,0"
+                       Foreground="{x:Static SystemColors.GrayTextBrush}"
+                       Text="{Binding HandlerTypeName}"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip="{Binding HandlerTypeName}" />
+          </Grid>
+        </Border>
+
+        <Border Grid.Column="1"
+                Background="{x:Static SystemColors.WindowBrush}"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch">
+          <Grid Margin="2,2,2,2"
+                VerticalAlignment="Center">
+            <editor:PropertyGridEditorTextBox Text="{Binding HandlerName, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                         Padding="2,1"
+                                         VerticalContentAlignment="Center"
+                                         ToolTip="{Binding Description}" />
+          </Grid>
+        </Border>
+
+        <Border Grid.Column="2"
+                Background="{x:Static SystemColors.WindowBrush}"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Center"
+                Width="14" />
+      </Grid>
+    </Border>
+  </DataTemplate>
+
+
+    <!-- Fixed colors for now; the whole IDE theme unification pass will make these
+       follow the workbench theme (doc/technotes/ilspy.md "Full application theming"). -->
+  <SolidColorBrush x:Key="PropertyGridOverrideBrush"
+                        Color="#FF0078D4" />
+  <SolidColorBrush x:Key="PropertyGridMutedBrush"
+                        Color="#FF8A8A8A" />
+
+<x:Static x:Key="EmptyString"
             Member="sys:String.Empty" />
 
   <!-- PropertyGrid numeric Editors -->
@@ -955,6 +1030,7 @@
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="{Binding NameColumnWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pg:PropertyGrid}}}" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
               </Grid.ColumnDefinitions>
               <Grid.RowDefinitions>
                 <RowDefinition />
@@ -1045,8 +1121,33 @@
                 </ContentControl>
               </Border>
 
+              <!-- VS-style default-value override indicator: a filled dot when the property's
+                   value differs from its default (IsDefaultValue == false), matching the
+                   UnoPropertyGrid design. -->
+              <Border Grid.Column="2"
+                      Background="{TemplateBinding Background}"
+                      Margin="0,0,0,0"
+                      VerticalAlignment="Stretch"
+                      HorizontalAlignment="Center"
+                      Width="14"
+                      Cursor="Hand"
+                      ToolTip="Click to reset the value to its default">
+                <Border.InputBindings>
+                  <MouseBinding MouseAction="LeftClick"
+                                Command="commands:PropertyItemCommands.ResetValue"
+                                CommandParameter="{Binding RelativeSource={RelativeSource TemplatedParent}}" />
+                </Border.InputBindings>
+                <Rectangle Width="8"
+                           Height="8"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           Fill="{Binding IsDefaultValue, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource DefaultValueToBrushConverter}}"
+                           Stroke="#FF8A8A8A"
+                           StrokeThickness="1" />
+              </Border>
+
               <Expander x:Name="_propertyExpander"
-                        Grid.ColumnSpan="2"
+                        Grid.ColumnSpan="3"
                         Grid.Row="1"
                         IsExpanded="{TemplateBinding IsExpanded}"
                         Style="{StaticResource PropertyExpanderStyle}"
@@ -1254,31 +1355,77 @@
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Grid x:Name="sortButtonContainer"
-                      Margin="4"
-                      Visibility="{Binding ShowSortOptions, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
-                  <StackPanel Orientation="Horizontal"
-                              Margin="1">
-                    <RadioButton IsChecked="{Binding IsCategorized, RelativeSource={RelativeSource TemplatedParent}}"
-                                 VerticalAlignment="Center"
-                                 Style="{StaticResource OptionsToggleButtonStyle}"
-                                 ToolTip="Categorized">
-                      <Image Source="./../Images/Categorize16.png"
-                             Width="16"
-                             Height="16" >
-                      </Image>
-                    </RadioButton>
-                    <RadioButton IsChecked="{Binding IsCategorized, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InverseBoolConverter}, Mode=OneWay}"
-                                 VerticalAlignment="Center"
-                                 Style="{StaticResource OptionsToggleButtonStyle}"
-                                 ToolTip="Alphabetical">
-                      <Image Source="./../Images/SortAscending16.png"
-                             Width="16"
-                             Height="16" >
-                      </Image>
-                    </RadioButton>
-                  </StackPanel>
-                </Grid>
+                <StackPanel Orientation="Horizontal">
+                  <Grid x:Name="sortButtonContainer"
+                        Margin="4"
+                        Visibility="{Binding ShowSortOptions, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal"
+                                Margin="1">
+                      <RadioButton IsChecked="{Binding IsCategorized, RelativeSource={RelativeSource TemplatedParent}}"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource OptionsToggleButtonStyle}"
+                                   ToolTip="Categorized">
+                        <Image Source="./../Images/Categorize16.png"
+                               Width="16"
+                               Height="16" >
+                        </Image>
+                      </RadioButton>
+                      <RadioButton IsChecked="{Binding IsCategorized, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource InverseBoolConverter}, Mode=OneWay}"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource OptionsToggleButtonStyle}"
+                                   ToolTip="Alphabetical">
+                        <Image Source="./../Images/SortAscending16.png"
+                               Width="16"
+                               Height="16" >
+                        </Image>
+                      </RadioButton>
+                    </StackPanel>
+                  </Grid>
+
+                  <Grid x:Name="viewButtonContainer"
+                        Margin="4"
+                        Visibility="{Binding ShowViewToggle, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal"
+                                Margin="1">
+                      <RadioButton IsChecked="{Binding ViewMode, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Properties}"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource OptionsToggleButtonStyle}"
+                                   ToolTip="Properties">
+                        <!-- VS-style "list" glyph drawn with shapes so it renders without the
+                             Segoe MDL2 font (LibreWPF on macOS). -->
+                        <Grid Width="14"
+                              Height="14">
+                          <Rectangle Height="2"
+                                     RadiusX="1"
+                                     RadiusY="1"
+                                     Fill="#FF444444"
+                                     VerticalAlignment="Top" />
+                          <Rectangle Height="2"
+                                     RadiusX="1"
+                                     RadiusY="1"
+                                     Fill="#FF444444"
+                                     VerticalAlignment="Center" />
+                          <Rectangle Height="2"
+                                     RadiusX="1"
+                                     RadiusY="1"
+                                     Fill="#FF444444"
+                                     VerticalAlignment="Bottom" />
+                        </Grid>
+                      </RadioButton>
+                      <RadioButton IsChecked="{Binding ViewMode, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Events}"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource OptionsToggleButtonStyle}"
+                                   ToolTip="Events">
+                        <!-- VS-style lightning-bolt glyph drawn with a Path (no font dependency). -->
+                        <Grid Width="14"
+                              Height="14">
+                          <Path Fill="#FF444444"
+                                Data="M 6.5,0 L 1.5,8 L 4.5,8 L 2.5,14 L 9.5,5.5 L 6,5.5 L 9.5,0 Z" />
+                        </Grid>
+                      </RadioButton>
+                    </StackPanel>
+                  </Grid>
+                </StackPanel>
 
                 <Border x:Name="searchBoxContainer"
                         Grid.Column="1"
@@ -1337,7 +1484,8 @@
                                           VirtualizingStackPanel.IsVirtualizing="{Binding IsVirtualizing, RelativeSource={RelativeSource TemplatedParent}}"
                                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                                           ScrollViewer.CanContentScroll="True"
-                                          VerticalAlignment="Top">
+                                          VerticalAlignment="Top"
+                                          Visibility="{Binding ViewMode, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Properties}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                       <VirtualizingStackPanel />
@@ -1376,14 +1524,57 @@
 
                 </pg:PropertyItemsControl>
 
+                <ItemsControl x:Name="PART_EventsControl"
+                              IsTabStop="False"
+                              Focusable="False"
+                              ItemsSource="{Binding Events, RelativeSource={RelativeSource TemplatedParent}}"
+                              ItemTemplate="{StaticResource EventItemTemplate}"
+                              Background="{x:Static SystemColors.WindowBrush}"
+                              Visibility="{Binding ViewMode, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Events}">
+                  <ItemsControl.Template>
+                    <ControlTemplate>
+                      <Border BorderThickness="{TemplateBinding BorderThickness}"
+                              Padding="{TemplateBinding Padding}"
+                              BorderBrush="{TemplateBinding BorderBrush}"
+                              Background="{TemplateBinding Background}"
+                              SnapsToDevicePixels="True">
+                        <ScrollViewer Padding="{TemplateBinding Padding}"
+                                      Focusable="False"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                          <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </ScrollViewer>
+                      </Border>
+                    </ControlTemplate>
+                  </ItemsControl.Template>
+                </ItemsControl>
+
                 <Thumb x:Name="PART_DragThumb"
                        HorizontalAlignment="Left"
-                       Width="5"
-                       Margin="6,0,0,0"
+                       Width="12"
                        Cursor="SizeWE">
                   <Thumb.Template>
                     <ControlTemplate>
-                      <Border Background="Transparent" />
+                      <Grid>
+                        <!-- Fully transparent: the resize is driven by grid-level boundary
+                             proximity (Grid_PreviewMouseLeftButtonDown), so this element is
+                             purely the hover visual and needs no hit area of its own. -->
+                        <Border Background="Transparent" />
+                        <!-- Visible grab line so the resize handle is discoverable (the drag
+                             itself is driven by mouse events - see DragThumb_PreviewMouse* in
+                             PropertyGrid.cs). The border's 1-alpha background makes the whole
+                             handle hit-testable - LibreWPF treats fully transparent
+                             backgrounds as non-hit-testable. -->
+                        <Rectangle x:Name="PART_ResizeLine"
+                                   Width="3"
+                                   HorizontalAlignment="Center"
+                                   Fill="#FF0078D4"
+                                   IsHitTestVisible="False"
+                                   Opacity="0" />
+                      </Grid>
+                      <!-- Line visibility is driven from PropertyGrid.Grid_PreviewMouseMove by
+                           proximity to the column boundary (the thumb is never hit-testable on
+                           LibreWPF, so IsMouseOver can't drive it). -->
                     </ControlTemplate>
                   </Thumb.Template>
                 </Thumb>
@@ -1410,19 +1601,8 @@
             </Grid>
           </Border>
           <ControlTemplate.Triggers>
-            <MultiTrigger>
-              <MultiTrigger.Conditions>
-                <Condition SourceName="searchBoxContainer"
-                           Property="Visibility"
-                           Value="Collapsed" />
-                <Condition SourceName="sortButtonContainer"
-                           Property="Visibility"
-                           Value="Collapsed" />
-              </MultiTrigger.Conditions>
-              <Setter TargetName="toolsContainer"
-                      Property="Visibility"
-                      Value="Collapsed" />
-            </MultiTrigger>
+            <!-- The toolbar is always shown: it carries the Properties/Events view toggle even
+                 when the search box and sort options are hidden. -->
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>

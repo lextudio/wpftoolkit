@@ -117,6 +117,13 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
       return false;
     }
 
+    /// <summary>Whether the value currently differs from its default - consumed by the row's
+    /// default-value indicator (PropertyItem.IsDefaultValue).</summary>
+    internal bool CanResetValue
+    {
+      get { return ComputeCanResetValue(); }
+    }
+
     protected virtual object ComputeAdvancedOptionsTooltip()
     {
       return null;
