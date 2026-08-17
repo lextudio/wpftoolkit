@@ -22,7 +22,7 @@
 
   <DataTemplate x:Key="DefaultWatermarkTemplate">
     <ContentControl Content="{Binding}"
-                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                    Foreground="{DynamicResource MutedForeground}"
                     Focusable="False" />
   </DataTemplate>
 
@@ -56,11 +56,11 @@
   <Style x:Key="WatermarkTextBox"
          TargetType="{x:Type local:WatermarkTextBox}">
     <Setter Property="Foreground"
-            Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}" />
+            Value="{DynamicResource Foreground}" />
     <Setter Property="Background"
-            Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+            Value="{DynamicResource WindowBackground}" />
     <Setter Property="BorderBrush"
-            Value="{DynamicResource {x:Static themes:ResourceKeys.ControlNormalBorderKey}}" />
+            Value="{DynamicResource Border}" />
     <Setter Property="BorderThickness"
             Value="1" />
     <Setter Property="Padding"
@@ -102,12 +102,12 @@
             <Border x:Name="MouseOverVisual"
                     Opacity="0"
                     BorderThickness="{TemplateBinding BorderThickness}"
-                    BorderBrush="{StaticResource TextBox_MouseOver}"
+                    BorderBrush="{DynamicResource HoverBackground}"
                     CornerRadius="1" />
             <Border x:Name="FocusVisual"
                     Opacity="0"
                     BorderThickness="{TemplateBinding BorderThickness}"
-                    BorderBrush="{StaticResource TextBox_Focused}"
+                    BorderBrush="{DynamicResource Selection}"
                     CornerRadius="1" />
 
           </Grid>
@@ -144,18 +144,18 @@
                      Value="True">
               <Setter TargetName="Border"
                       Property="BorderBrush"
-                      Value="{DynamicResource {x:Static themes:ResourceKeys.ControlMouseOverBorderKey}}" />
+                      Value="{DynamicResource HoverBackground}" />
             </Trigger>
             <Trigger Property="IsKeyboardFocusWithin"
                      Value="True">
               <Setter TargetName="Border"
                       Property="BorderBrush"
-                      Value="{DynamicResource {x:Static themes:ResourceKeys.ControlSelectedBorderKey}}" />
+                      Value="{DynamicResource Selection}" />
             </Trigger>
             <Trigger Property="IsEnabled"
                      Value="False">
               <Setter Property="Foreground"
-                      Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                      Value="{DynamicResource MutedForeground}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>

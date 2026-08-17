@@ -68,7 +68,7 @@
     <Setter Property="Foreground"
             Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
     <Setter Property="Background"
-            Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+            Value="{DynamicResource WindowBackground}" />
     <Setter Property="BorderBrush"
             Value="{StaticResource TextBoxBorder}" />
     <Setter Property="BorderThickness"
@@ -112,12 +112,12 @@
             <Border x:Name="MouseOverVisual"
                     Opacity="0"
                     BorderThickness="{TemplateBinding BorderThickness}"
-                    BorderBrush="{StaticResource TextBox_MouseOver}"
+                    BorderBrush="{DynamicResource HoverBackground}"
                     CornerRadius="1" />
             <Border x:Name="FocusVisual"
                     Opacity="0"
                     BorderThickness="{TemplateBinding BorderThickness}"
-                    BorderBrush="{StaticResource TextBox_Focused}"
+                    BorderBrush="{DynamicResource Selection}"
                     CornerRadius="1" />
 
           </Grid>
@@ -165,7 +165,7 @@
             <Trigger Property="IsEnabled"
                      Value="false">
               <Setter Property="Foreground"
-                      Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                      Value="{DynamicResource MutedForeground}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>

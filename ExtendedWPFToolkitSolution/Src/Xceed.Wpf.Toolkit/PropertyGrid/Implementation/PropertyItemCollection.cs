@@ -179,6 +179,16 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
           return false;
         };
       }
+      else
+      {
+        // Empty filter: the view shows every property again, but the predicate above never runs
+        // (it is null), so a previous filter's HighlightedText would otherwise stick forever.
+        // Clear it explicitly so the search highlight disappears when the filter is cleared.
+        foreach( var property in PropertyItems )
+        {
+          property.HighlightedText = null;
+        }
+      }
 
       return filter;
     }

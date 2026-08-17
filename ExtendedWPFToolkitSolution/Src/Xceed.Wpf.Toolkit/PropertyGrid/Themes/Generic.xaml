@@ -54,7 +54,7 @@
   <pgconv:DefaultValueToBrushConverter x:Key="DefaultValueToBrushConverter" />
 
   <DataTemplate x:Key="EventItemTemplate">
-    <Border Background="{x:Static SystemColors.WindowBrush}"
+    <Border Background="{DynamicResource WindowBackground}"
             Margin="0,0,0,1">
       <!-- 10px left indent matching the properties rows' category-expander padding, so the
            name column aligns between the two views. -->
@@ -67,8 +67,8 @@
           <ColumnDefinition Width="16" />
         </Grid.ColumnDefinitions>
 
-        <Border Background="{x:Static SystemColors.WindowBrush}"
-                BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
+        <Border Background="{DynamicResource WindowBackground}"
+                BorderBrush="{DynamicResource Border}"
                 BorderThickness="0,0,1,0"
                 Margin="0,0,1,0"
                 VerticalAlignment="Stretch"
@@ -76,10 +76,23 @@
                 ToolTip="{Binding Description}">
           <Grid Margin="4,2,2,2"
                 VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <!-- VS2017 Bolt icon for the event rows (the old "⚡" text glyph renders black in
+                 the dark theme because LibreWPF draws the emoji glyph with its own palette). -->
+            <Image Grid.Column="0"
+                   Source="{DynamicResource Xceed.Icons.Event}"
+                   Width="12"
+                   Height="12"
+                   Margin="0,0,4,0"
+                   VerticalAlignment="Center" />
             <!-- The delegate type name lives in the tooltip only: an inline "Auto" sibling
                  (e.g. "System.Windows.Forms.FormClosingEventHandler") squeezes the event name
                  to zero width, so rows rendered the type name instead of the event name. -->
-            <TextBlock Text="{Binding DisplayName}"
+            <TextBlock Grid.Column="1"
+                       Text="{Binding DisplayName}"
                        ToolTip="{Binding HandlerTypeName}"
                        HorizontalAlignment="Stretch"
                        VerticalAlignment="Center"
@@ -88,7 +101,7 @@
         </Border>
 
         <Border Grid.Column="1"
-                Background="{x:Static SystemColors.WindowBrush}"
+                Background="{DynamicResource WindowBackground}"
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Stretch">
           <Grid Margin="2,2,2,2"
@@ -101,7 +114,7 @@
         </Border>
 
         <Border Grid.Column="2"
-                Background="{x:Static SystemColors.WindowBrush}"
+                Background="{DynamicResource WindowBackground}"
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Center"
                 Width="14" />
@@ -309,7 +322,7 @@
       <Trigger Property="IsEnabled"
                Value="False">
         <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                Value="{DynamicResource MutedForeground}" />
       </Trigger>
     </Style.Triggers>
   </Style>
@@ -585,13 +598,13 @@
                      Value="True">
               <Setter Property="Background"
                       TargetName="OuterBorder"
-                      Value="{StaticResource MouseOverBackgroundBrush}" />
+                      Value="{DynamicResource HoverBackground}" />
               <Setter Property="BorderBrush"
                       TargetName="OuterBorder"
-                      Value="{StaticResource MouseOverBorderBrush}" />
+                      Value="{DynamicResource Border}" />
               <Setter Property="BorderBrush"
                       TargetName="InnerBorder"
-                      Value="#80FFFFFF" />
+                      Value="Transparent" />
             </Trigger>
 
             <Trigger Property="IsEnabled"
@@ -608,38 +621,23 @@
                      Value="True">
               <Setter Property="Background"
                       TargetName="OuterBorder"
-                      Value="{StaticResource CheckedBackgroundBrush}" />
+                      Value="{DynamicResource Selection}" />
               <Setter Property="BorderBrush"
                       TargetName="OuterBorder"
-                      Value="{StaticResource CheckedBorderBrush}" />
+                      Value="{DynamicResource Border}" />
               <Setter Property="BorderBrush"
-                      TargetName="InnerBorder">
-                <Setter.Value>
-                  <LinearGradientBrush EndPoint="0,1"
-                                       StartPoint="0,0">
-                    <GradientStop Color="#FFE7CBAD"
-                                  Offset="0" />
-                    <GradientStop Color="#FFF7D7B5"
-                                  Offset="0.1" />
-                    <GradientStop Color="#FFFFD38C"
-                                  Offset="0.36" />
-                    <GradientStop Color="#FFFFC75A"
-                                  Offset="0.36" />
-                    <GradientStop Color="#FFFFEFA5"
-                                  Offset="1" />
-                  </LinearGradientBrush>
-                </Setter.Value>
-              </Setter>
+                      TargetName="InnerBorder"
+                      Value="Transparent" />
             </Trigger>
 
             <Trigger Property="IsPressed"
                      Value="True">
               <Setter Property="Background"
                       TargetName="OuterBorder"
-                      Value="{StaticResource PressedBackgroundBrush}" />
+                      Value="{DynamicResource Selection}" />
               <Setter Property="BorderBrush"
                       TargetName="OuterBorder"
-                      Value="{StaticResource PressedBorderBrush}" />
+                      Value="{DynamicResource Border}" />
               <Setter Property="BorderBrush"
                       TargetName="InnerBorder"
                       Value="Transparent" />
@@ -732,13 +730,13 @@
                      Value="True">
               <Setter Property="Background"
                       TargetName="OuterBorder"
-                      Value="{StaticResource MouseOverBackgroundBrush}" />
+                      Value="{DynamicResource HoverBackground}" />
               <Setter Property="BorderBrush"
                       TargetName="OuterBorder"
-                      Value="{StaticResource MouseOverBorderBrush}" />
+                      Value="{DynamicResource Border}" />
               <Setter Property="BorderBrush"
                       TargetName="InnerBorder"
-                      Value="#80FFFFFF" />
+                      Value="Transparent" />
             </Trigger>
 
             <Trigger Property="IsEnabled"
@@ -755,10 +753,10 @@
                      Value="True">
               <Setter Property="Background"
                       TargetName="OuterBorder"
-                      Value="{StaticResource PressedBackgroundBrush}" />
+                      Value="{DynamicResource Selection}" />
               <Setter Property="BorderBrush"
                       TargetName="OuterBorder"
-                      Value="{StaticResource PressedBorderBrush}" />
+                      Value="{DynamicResource Border}" />
               <Setter Property="BorderBrush"
                       TargetName="InnerBorder"
                       Value="Transparent" />
@@ -790,7 +788,7 @@
       <Path HorizontalAlignment="Center"
             x:Name="Up_Arrow"
             VerticalAlignment="Center"
-            Fill="{StaticResource GlyphBrush}"
+            Fill="{DynamicResource Foreground}"
             Data="M 0 0 L 4 4 L 8 0 Z"
             RenderTransformOrigin="0.5,0.5">
         <Path.RenderTransform>
@@ -809,7 +807,7 @@
             HorizontalAlignment="Center"
             x:Name="Down_Arrow"
             VerticalAlignment="Center"
-            Fill="{StaticResource GlyphBrush}"
+            Fill="{DynamicResource Foreground}"
             Data="M 0 4 L 4 0 L 8 4 Z"
             RenderTransformOrigin="0.5,0.5">
         <Path.RenderTransform>
@@ -848,7 +846,7 @@
     <Setter Property="Padding"
             Value="0" />
     <Setter Property="Background"
-            Value="#FFF0F0F0" />
+            Value="{DynamicResource ToolWindowBackground}" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type Expander}">
@@ -860,7 +858,7 @@
             </Grid.RowDefinitions>
             <Border x:Name="Border"
                     Background="{TemplateBinding Background}"
-                    BorderBrush="#FFF0F0F0">
+                    BorderBrush="{DynamicResource Border}">
               <ToggleButton Template="{StaticResource ExpanderToggleButton}"
                             IsChecked="{Binding Path=IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
                             OverridesDefaultStyle="True">
@@ -873,7 +871,7 @@
             <Border Visibility="Collapsed"
                     Grid.Row="1"
                     x:Name="ExpandSite"
-                    Background="{x:Static SystemColors.ControlBrush}"
+                    Background="{DynamicResource ToolWindowBackground}"
                     Padding="10 0 0 0">
               <Border BorderThickness="0"
                       Margin="0"
@@ -1002,7 +1000,7 @@
   <Style TargetType="{x:Type pg:PropertyItemBase}">
 
     <Setter Property="Background"
-            Value="{x:Static SystemColors.WindowBrush}" />
+            Value="{DynamicResource WindowBackground}" />
     <!-- Set the margin at 1 pixel bottom to let the horizontal "line" effect appear. -->
     <Setter Property="Margin"
             Value="0,0,0,1" />
@@ -1063,6 +1061,7 @@
                                          Grid.Column="1"
                                          Text="{Binding DisplayName, RelativeSource={RelativeSource TemplatedParent}}"
                                          HighlightedText="{Binding HighlightedText, RelativeSource={RelativeSource TemplatedParent}}"
+                                         HighlightedBrush="{DynamicResource SearchHighlight}"
                                          HorizontalAlignment="Stretch"
                                          VerticalAlignment="Center"
                                          TextTrimming="CharacterEllipsis"
@@ -1198,10 +1197,10 @@
                      Value="False">
               <Setter Property="Foreground"
                       TargetName="PART_ValueContainer"
-                      Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                      Value="{DynamicResource MutedForeground}" />
               <Setter Property="Foreground"
                       TargetName="_text"
-                      Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                      Value="{DynamicResource MutedForeground}" />
             </Trigger>
             <MultiDataTrigger>
               <MultiDataTrigger.Conditions>
@@ -1233,37 +1232,37 @@
                          Value="{x:Static pg:StringConstants.Local}">
               <Setter TargetName="_optionsImage"
                       Property="Source"
-                      Value="../Images/Local11.png" />
+                      Value="{DynamicResource Xceed.Icons.Settings}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding ElementName=_optionsImage, Path=ToolTip}"
                          Value="{x:Static pg:StringConstants.Resource}">
               <Setter TargetName="_optionsImage"
                       Property="Source"
-                      Value="../Images/Resource11.png" />
+                      Value="{DynamicResource Xceed.Icons.Settings}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding ElementName=_optionsImage, Path=ToolTip}"
                          Value="{x:Static pg:StringConstants.Databinding}">
               <Setter TargetName="_optionsImage"
                       Property="Source"
-                      Value="../Images/Database11.png" />
+                      Value="{DynamicResource Xceed.Icons.Settings}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding ElementName=_optionsImage, Path=ToolTip}"
                          Value="{x:Static pg:StringConstants.Inheritance}">
               <Setter TargetName="_optionsImage"
                       Property="Source"
-                      Value="../Images/Inheritance11.png" />
+                      Value="{DynamicResource Xceed.Icons.Settings}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding ElementName=_optionsImage, Path=ToolTip}"
                          Value="{x:Static pg:StringConstants.StyleSetter}">
               <Setter TargetName="_optionsImage"
                       Property="Source"
-                      Value="../Images/Style11.png" />
+                      Value="{DynamicResource Xceed.Icons.Settings}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding ElementName=_optionsImage, Path=ToolTip}"
                          Value="{x:Static pg:StringConstants.Default}">
               <Setter TargetName="_optionsImage"
                       Property="Source"
-                      Value="../Images/AdvancedProperties11.png" />
+                      Value="{DynamicResource Xceed.Icons.Settings}" />
             </DataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -1275,9 +1274,9 @@
     <Setter Property="AdvancedOptionsMenu"
             Value="{StaticResource {ComponentResourceKey TypeInTargetAssembly={x:Type pg:PropertyGrid}, ResourceId=SelectedObjectAdvancedOptionsMenu}}" />
     <Setter Property="Background"
-            Value="#BCC7D8" />
+            Value="{DynamicResource WindowBackground}" />
     <Setter Property="BorderBrush"
-            Value="#43577B" />
+            Value="{DynamicResource Border}" />
     <Setter Property="BorderThickness"
             Value="1" />
     <Setter Property="SelectedObjectType"
@@ -1357,7 +1356,7 @@
                                    VerticalAlignment="Center"
                                    Style="{StaticResource OptionsToggleButtonStyle}"
                                    ToolTip="Categorized">
-                        <Image Source="./../Images/Categorize16.png"
+                        <Image Source="{DynamicResource Xceed.Icons.GroupBy}"
                                Width="16"
                                Height="16" >
                         </Image>
@@ -1366,7 +1365,7 @@
                                    VerticalAlignment="Center"
                                    Style="{StaticResource OptionsToggleButtonStyle}"
                                    ToolTip="Alphabetical">
-                        <Image Source="./../Images/SortAscending16.png"
+                        <Image Source="{DynamicResource Xceed.Icons.SortAscending}"
                                Width="16"
                                Height="16" >
                         </Image>
@@ -1384,24 +1383,65 @@
                                    Style="{StaticResource OptionsToggleButtonStyle}"
                                    ToolTip="Properties">
                         <!-- VS-style "list" glyph drawn with shapes so it renders without the
-                             Segoe MDL2 font (LibreWPF on macOS). -->
+                             Segoe MDL2 font (LibreWPF on macOS). The fill follows the toggle
+                             state: theme foreground normally, selection-foreground (white)
+                             when checked against the selection background. -->
                         <Grid Width="14"
                               Height="14">
                           <Rectangle Height="2"
                                      RadiusX="1"
                                      RadiusY="1"
-                                     Fill="#FF444444"
-                                     VerticalAlignment="Top" />
+                                     VerticalAlignment="Top">
+                            <Rectangle.Style>
+                              <Style TargetType="Rectangle">
+                                <Setter Property="Fill"
+                                        Value="{DynamicResource Foreground}" />
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
+                                               Value="True">
+                                    <Setter Property="Fill"
+                                            Value="{DynamicResource SelectionForeground}" />
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </Rectangle.Style>
+                          </Rectangle>
                           <Rectangle Height="2"
                                      RadiusX="1"
                                      RadiusY="1"
-                                     Fill="#FF444444"
-                                     VerticalAlignment="Center" />
+                                     VerticalAlignment="Center">
+                            <Rectangle.Style>
+                              <Style TargetType="Rectangle">
+                                <Setter Property="Fill"
+                                        Value="{DynamicResource Foreground}" />
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
+                                               Value="True">
+                                    <Setter Property="Fill"
+                                            Value="{DynamicResource SelectionForeground}" />
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </Rectangle.Style>
+                          </Rectangle>
                           <Rectangle Height="2"
                                      RadiusX="1"
                                      RadiusY="1"
-                                     Fill="#FF444444"
-                                     VerticalAlignment="Bottom" />
+                                     VerticalAlignment="Bottom">
+                            <Rectangle.Style>
+                              <Style TargetType="Rectangle">
+                                <Setter Property="Fill"
+                                        Value="{DynamicResource Foreground}" />
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
+                                               Value="True">
+                                    <Setter Property="Fill"
+                                            Value="{DynamicResource SelectionForeground}" />
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </Rectangle.Style>
+                          </Rectangle>
                         </Grid>
                       </RadioButton>
                       <RadioButton IsChecked="{Binding ViewMode, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Events}"
@@ -1411,8 +1451,21 @@
                         <!-- VS-style lightning-bolt glyph drawn with a Path (no font dependency). -->
                         <Grid Width="14"
                               Height="14">
-                          <Path Fill="#FF444444"
-                                Data="M 6.5,0 L 1.5,8 L 4.5,8 L 2.5,14 L 9.5,5.5 L 6,5.5 L 9.5,0 Z" />
+                          <Path Data="M 6.5,0 L 1.5,8 L 4.5,8 L 2.5,14 L 9.5,5.5 L 6,5.5 L 9.5,0 Z">
+                            <Path.Style>
+                              <Style TargetType="Path">
+                                <Setter Property="Fill"
+                                        Value="{DynamicResource Foreground}" />
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
+                                               Value="True">
+                                    <Setter Property="Fill"
+                                            Value="{DynamicResource SelectionForeground}" />
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </Path.Style>
+                          </Path>
                         </Grid>
                       </RadioButton>
                     </StackPanel>
@@ -1422,8 +1475,8 @@
                 <Border x:Name="searchBoxContainer"
                         Grid.Column="1"
                         Margin="4,4,0,4"
-                        Background="White"
-                        BorderBrush="Gray"
+                        Background="{DynamicResource ToolWindowBackground}"
+                        BorderBrush="{DynamicResource Border}"
                         BorderThickness="1"
                         Visibility="{Binding ShowSearchBox, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
                   <Grid>
@@ -1456,9 +1509,28 @@
                             Command="commands:PropertyGridCommands.ClearFilter"
                             Style="{StaticResource ClearFilterButtonStyle}"
                             HorizontalAlignment="Left">
-                      <Image Source="./../Images/ClearFilter16.png"
-                             Width="16"
-                             Height="16" >
+                      <!-- Magnifier while the filter is empty; clear (x) once the user typed
+                           a filter, matching VS's search box. -->
+                      <Image Width="16"
+                             Height="16">
+                        <Image.Style>
+                          <Style TargetType="Image">
+                            <Setter Property="Source"
+                                    Value="{DynamicResource Xceed.Icons.Clear}" />
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding Filter, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pg:PropertyGrid}}}"
+                                           Value="">
+                                <Setter Property="Source"
+                                        Value="{DynamicResource Xceed.Icons.Search}" />
+                              </DataTrigger>
+                              <DataTrigger Binding="{Binding Filter, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type pg:PropertyGrid}}}"
+                                           Value="{x:Null}">
+                                <Setter Property="Source"
+                                        Value="{DynamicResource Xceed.Icons.Search}" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </Image.Style>
                       </Image>
                     </Button>
                   </Grid>
@@ -1466,13 +1538,13 @@
               </Grid>
 
               <Grid Grid.Row="2"
-                    Background="{x:Static SystemColors.WindowBrush}">
+                    Background="{DynamicResource WindowBackground}">
                 <pg:PropertyItemsControl  x:Name="PART_PropertyItemsControl"
                                           IsTabStop="False"
                                           Focusable="False"
                                           ItemsSource="{Binding Properties, RelativeSource={RelativeSource TemplatedParent}}"
                                           ItemContainerStyle="{Binding PropertyContainerStyle, RelativeSource={RelativeSource TemplatedParent}}"
-                                          Background="{x:Static SystemColors.ControlBrush}"
+                                          Background="{DynamicResource ToolWindowBackground}"
                                           VirtualizingStackPanel.IsVirtualizing="{Binding IsVirtualizing, RelativeSource={RelativeSource TemplatedParent}}"
                                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                                           ScrollViewer.CanContentScroll="True"
@@ -1521,7 +1593,7 @@
                               Focusable="False"
                               ItemsSource="{Binding Events, RelativeSource={RelativeSource TemplatedParent}}"
                               ItemTemplate="{StaticResource EventItemTemplate}"
-                              Background="{x:Static SystemColors.WindowBrush}"
+                              Background="{DynamicResource WindowBackground}"
                               Visibility="{Binding ViewMode, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Events}">
                   <ItemsControl.Template>
                     <ControlTemplate>
