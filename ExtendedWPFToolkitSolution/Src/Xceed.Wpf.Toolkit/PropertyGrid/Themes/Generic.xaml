@@ -76,22 +76,14 @@
                 ToolTip="{Binding Description}">
           <Grid Margin="4,2,2,2"
                 VerticalAlignment="Center">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0"
-                       Text="{Binding DisplayName}"
+            <!-- The delegate type name lives in the tooltip only: an inline "Auto" sibling
+                 (e.g. "System.Windows.Forms.FormClosingEventHandler") squeezes the event name
+                 to zero width, so rows rendered the type name instead of the event name. -->
+            <TextBlock Text="{Binding DisplayName}"
+                       ToolTip="{Binding HandlerTypeName}"
                        HorizontalAlignment="Stretch"
                        VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis" />
-            <TextBlock Grid.Column="1"
-                       Margin="4,0,0,0"
-                       Foreground="{x:Static SystemColors.GrayTextBrush}"
-                       Text="{Binding HandlerTypeName}"
-                       VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis"
-                       ToolTip="{Binding HandlerTypeName}" />
           </Grid>
         </Border>
 
