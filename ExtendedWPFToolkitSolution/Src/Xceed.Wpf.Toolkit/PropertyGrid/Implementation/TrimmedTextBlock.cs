@@ -138,9 +138,12 @@ namespace Xceed.Wpf.Toolkit.PropertyGrid
       var run = new Run( startUnHighlightedText );
       this.Inlines.Add( run );
 
-      // Highlighted text
+      // Highlighted text: the search-highlight background (SearchHighlight, golden in the
+      // dark theme) needs dark text for contrast - inheriting the grid's light foreground
+      // would make the matched text unreadable.
       run = new Run( highlightedText );
       run.Background = this.HighlightedBrush;
+      run.Foreground = Brushes.Black;
       this.Inlines.Add( run );
 
       // End Un-Highlighted text
