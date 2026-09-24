@@ -1382,91 +1382,19 @@
                                    VerticalAlignment="Center"
                                    Style="{StaticResource OptionsToggleButtonStyle}"
                                    ToolTip="Properties">
-                        <!-- VS-style "list" glyph drawn with shapes so it renders without the
-                             Segoe MDL2 font (LibreWPF on macOS). The fill follows the toggle
-                             state: theme foreground normally, selection-foreground (white)
-                             when checked against the selection background. -->
-                        <Grid Width="14"
-                              Height="14">
-                          <Rectangle Height="2"
-                                     RadiusX="1"
-                                     RadiusY="1"
-                                     VerticalAlignment="Top">
-                            <Rectangle.Style>
-                              <Style TargetType="Rectangle">
-                                <Setter Property="Fill"
-                                        Value="{DynamicResource Foreground}" />
-                                <Style.Triggers>
-                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
-                                               Value="True">
-                                    <Setter Property="Fill"
-                                            Value="{DynamicResource SelectionForeground}" />
-                                  </DataTrigger>
-                                </Style.Triggers>
-                              </Style>
-                            </Rectangle.Style>
-                          </Rectangle>
-                          <Rectangle Height="2"
-                                     RadiusX="1"
-                                     RadiusY="1"
-                                     VerticalAlignment="Center">
-                            <Rectangle.Style>
-                              <Style TargetType="Rectangle">
-                                <Setter Property="Fill"
-                                        Value="{DynamicResource Foreground}" />
-                                <Style.Triggers>
-                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
-                                               Value="True">
-                                    <Setter Property="Fill"
-                                            Value="{DynamicResource SelectionForeground}" />
-                                  </DataTrigger>
-                                </Style.Triggers>
-                              </Style>
-                            </Rectangle.Style>
-                          </Rectangle>
-                          <Rectangle Height="2"
-                                     RadiusX="1"
-                                     RadiusY="1"
-                                     VerticalAlignment="Bottom">
-                            <Rectangle.Style>
-                              <Style TargetType="Rectangle">
-                                <Setter Property="Fill"
-                                        Value="{DynamicResource Foreground}" />
-                                <Style.Triggers>
-                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
-                                               Value="True">
-                                    <Setter Property="Fill"
-                                            Value="{DynamicResource SelectionForeground}" />
-                                  </DataTrigger>
-                                </Style.Triggers>
-                              </Style>
-                            </Rectangle.Style>
-                          </Rectangle>
-                        </Grid>
+                        <Image Source="{DynamicResource Xceed.Icons.Properties}"
+                               Width="16"
+                               Height="16" >
+                        </Image>
                       </RadioButton>
                       <RadioButton IsChecked="{Binding ViewMode, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Events}"
                                    VerticalAlignment="Center"
                                    Style="{StaticResource OptionsToggleButtonStyle}"
                                    ToolTip="Events">
-                        <!-- VS-style lightning-bolt glyph drawn with a Path (no font dependency). -->
-                        <Grid Width="14"
-                              Height="14">
-                          <Path Data="M 6.5,0 L 1.5,8 L 4.5,8 L 2.5,14 L 9.5,5.5 L 6,5.5 L 9.5,0 Z">
-                            <Path.Style>
-                              <Style TargetType="Path">
-                                <Setter Property="Fill"
-                                        Value="{DynamicResource Foreground}" />
-                                <Style.Triggers>
-                                  <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type RadioButton}}}"
-                                               Value="True">
-                                    <Setter Property="Fill"
-                                            Value="{DynamicResource SelectionForeground}" />
-                                  </DataTrigger>
-                                </Style.Triggers>
-                              </Style>
-                            </Path.Style>
-                          </Path>
-                        </Grid>
+                        <Image Source="{DynamicResource Xceed.Icons.Events}"
+                               Width="16"
+                               Height="16" >
+                        </Image>
                       </RadioButton>
                     </StackPanel>
                   </Grid>
