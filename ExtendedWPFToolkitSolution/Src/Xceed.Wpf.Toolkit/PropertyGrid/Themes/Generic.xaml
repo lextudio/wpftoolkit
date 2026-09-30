@@ -834,9 +834,6 @@
         <Setter Property="Visibility"
                 Value="Collapsed"
                 TargetName="Up_Arrow" />
-        <Setter Property="OpacityMask"
-                TargetName="Down_Arrow"
-                Value="#FF000000" />
       </Trigger>
     </ControlTemplate.Triggers>
   </ControlTemplate>
