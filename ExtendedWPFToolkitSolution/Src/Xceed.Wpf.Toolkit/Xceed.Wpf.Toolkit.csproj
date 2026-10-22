@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <!-- Only Zoombox/MaskedTextBox/MessageBox use legacy Code-Access-Security permission demands
-         (EnvironmentPermission/UIPermission), which moved out of the BCL into this package. -->
-    <PackageReference Include="System.Security.Permissions" Version="9.0.0" />
+         (EnvironmentPermission/UIPermission), which moved out of the BCL into System.Security.Permissions, which LibreWPF.Sdk already references. -->
   </ItemGroup>
 </Project>
