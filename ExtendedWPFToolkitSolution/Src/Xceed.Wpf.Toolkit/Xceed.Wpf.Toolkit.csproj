@@ -11,6 +11,26 @@
     <OutputPath>..\..\..\..\bin\</OutputPath>
   </PropertyGroup>
 
+  <!-- The lextudio fork's package: the assembly keeps its Xceed.Wpf.Toolkit name (XAML namespaces and consumers
+       reference it), only the package id says whose build it is. Ms-PL community edition, version 3.7.0 plus the
+       fork's changes. -->
+  <PropertyGroup>
+    <PackageId>LeXtudio.Xceed.Wpf.Toolkit</PackageId>
+    <Version>3.7.1</Version>
+    <Authors>Xceed Software Inc.; LeXtudio</Authors>
+    <Description>Xceed Toolkit for WPF (Community Edition, Ms-PL) as built by the lextudio fork for LibreWPF on .NET 10: dark theme and property grid fixes, no System.Security.Permissions reference.</Description>
+    <PackageLicenseFile>license.md</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/lextudio/wpftoolkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/lextudio/wpftoolkit</RepositoryUrl>
+    <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\..\license.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
     <Resource Include="**\*.png" />

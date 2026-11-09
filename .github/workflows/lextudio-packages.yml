@@ -1,0 +1,85 @@
+name: Build and publish LeXtudio.Xceed.Wpf.Toolkit
+
+# Builds the toolkit assembly (Xceed.Wpf.Toolkit, Ms-PL community edition) for LibreWPF on .NET 10 and publishes it
+# to the lextudio GitHub Packages feed as LeXtudio.Xceed.Wpf.Toolkit. Tag v<package version> publishes.
+
+on:
+  pull_request:
+    branches: [openwpf]
+    paths: ['ExtendedWPFToolkitSolution/Src/Xceed.Wpf.Toolkit/**', 'global.json', 'NuGet.config', '.github/workflows/lextudio-packages.yml']
+  push:
+    branches: [openwpf]
+    tags: ['v*']
+    paths: ['ExtendedWPFToolkitSolution/Src/Xceed.Wpf.Toolkit/**', 'global.json', 'NuGet.config', '.github/workflows/lextudio-packages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+  # Read by NuGet for every restore, including the MSBuild SDK resolver (LibreWPF.Sdk), which ignores --configfile.
+  # The key has no dash: NuGet builds this variable name from it, and a dash is not portable on Linux/macOS.
+  NuGetPackageSourceCredentials_openavalon_github: Username=${{ github.actor }};Password=${{ secrets.GITHUB_TOKEN }};ValidAuthenticationTypes=Basic
+
+jobs:
+  validate:
+    name: Validate (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            runner: windows-2025
+          - name: macos-arm64
+            runner: macos-15
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Pack
+        shell: pwsh
+        run: |
+          # The project's default OutputPath points four directories up (OpenDevelop's bin when it is a submodule).
+          dotnet pack ExtendedWPFToolkitSolution/Src/Xceed.Wpf.Toolkit/Xceed.Wpf.Toolkit.csproj -c Release -o nupkg "-p:OutputPath=$env:GITHUB_WORKSPACE/pack-bin/"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $packages = @(Get-ChildItem nupkg -Filter 'LeXtudio.Xceed.Wpf.Toolkit.*.nupkg')
+          if ($packages.Count -ne 1) { throw "Expected one package, found: $($packages.Name -join ', ')." }
+      - name: Upload validated package
+        if: matrix.name == 'windows-x64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: toolkit-nupkg
+          path: nupkg/LeXtudio.Xceed.Wpf.Toolkit.*.nupkg
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Package
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/openwpf')
+    runs-on: windows-2025
+    steps:
+      - name: Download validated package
+        uses: actions/download-artifact@v8
+        with:
+          name: toolkit-nupkg
+          path: nupkg
+      - name: Verify tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $expected = "$env:GITHUB_REF_NAME".Substring(1)
+          $package = Get-ChildItem nupkg -Filter 'LeXtudio.Xceed.Wpf.Toolkit.*.nupkg' -ErrorAction Stop
+          $version = $package.Name -replace '^LeXtudio\.Xceed\.Wpf\.Toolkit\.(\d+\.\d+\.\d+(\.\d+)?)\.nupkg$', '$1'
+          if ($version -ne $expected) { throw "Tag $env:GITHUB_REF_NAME does not match $($package.Name) (version $version)." }
+      - name: Push package
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $package = Get-ChildItem nupkg -Filter 'LeXtudio.Xceed.Wpf.Toolkit.*.nupkg' -ErrorAction Stop
+          dotnet nuget push $package.FullName --api-key $env:GITHUB_TOKEN --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
