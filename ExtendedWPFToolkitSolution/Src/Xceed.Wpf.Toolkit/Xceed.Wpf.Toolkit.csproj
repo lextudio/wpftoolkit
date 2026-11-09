@@ -11,14 +11,15 @@
     <OutputPath>..\..\..\..\bin\</OutputPath>
   </PropertyGroup>
 
-  <!-- The lextudio fork's package: the assembly keeps its Xceed.Wpf.Toolkit name (XAML namespaces and consumers
-       reference it), only the package id says whose build it is. Ms-PL community edition, version 3.7.0 plus the
-       fork's changes. -->
+  <!-- The lextudio fork's package. The package id deliberately does not carry the Xceed name: Ms-PL section 3(A)
+       grants no right to a contributor's name, logo or trademarks. The assembly and namespaces keep their
+       Xceed.Wpf.Toolkit names for now because XAML and consumers reference them as code identifiers; the copyright
+       headers and the Ms-PL text stay (section 3(C)). Version 3.7.0 of the community edition plus the fork's changes. -->
   <PropertyGroup>
-    <PackageId>LeXtudio.Xceed.Wpf.Toolkit</PackageId>
-    <Version>3.7.1</Version>
-    <Authors>Xceed Software Inc.; LeXtudio</Authors>
-    <Description>Xceed Toolkit for WPF (Community Edition, Ms-PL) as built by the lextudio fork for LibreWPF on .NET 10: dark theme and property grid fixes, no System.Security.Permissions reference.</Description>
+    <PackageId>LeXtudio.Wpf.Toolkit</PackageId>
+    <Version>3.7.2</Version>
+    <Authors>Xceed Software Inc. (original authors); LeXtudio</Authors>
+    <Description>Toolkit for WPF controls, based on the Community Edition (Ms-PL) of the open-source toolkit originally published by Xceed Software Inc. and maintained here by LeXtudio for LibreWPF on .NET 10: dark theme and property grid fixes, no System.Security.Permissions reference. Not affiliated with or endorsed by Xceed Software Inc.</Description>
     <PackageLicenseFile>license.md</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/lextudio/wpftoolkit</PackageProjectUrl>

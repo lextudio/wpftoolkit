@@ -1,7 +1,7 @@
-name: Build and publish LeXtudio.Xceed.Wpf.Toolkit
+name: Build and publish LeXtudio.Wpf.Toolkit
 
 # Builds the toolkit assembly (Xceed.Wpf.Toolkit, Ms-PL community edition) for LibreWPF on .NET 10 and publishes it
-# to the lextudio GitHub Packages feed as LeXtudio.Xceed.Wpf.Toolkit. Tag v<package version> publishes.
+# to the lextudio GitHub Packages feed as LeXtudio.Wpf.Toolkit (the id avoids the Xceed trademark, Ms-PL 3(A)). Tag v<package version> publishes.
 
 on:
   pull_request:
@@ -46,14 +46,14 @@ jobs:
           # The project's default OutputPath points four directories up (OpenDevelop's bin when it is a submodule).
           dotnet pack ExtendedWPFToolkitSolution/Src/Xceed.Wpf.Toolkit/Xceed.Wpf.Toolkit.csproj -c Release -o nupkg "-p:OutputPath=$env:GITHUB_WORKSPACE/pack-bin/"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $packages = @(Get-ChildItem nupkg -Filter 'LeXtudio.Xceed.Wpf.Toolkit.*.nupkg')
+          $packages = @(Get-ChildItem nupkg -Filter 'LeXtudio.Wpf.Toolkit.*.nupkg')
           if ($packages.Count -ne 1) { throw "Expected one package, found: $($packages.Name -join ', ')." }
       - name: Upload validated package
         if: matrix.name == 'windows-x64'
         uses: actions/upload-artifact@v7
         with:
           name: toolkit-nupkg
-          path: nupkg/LeXtudio.Xceed.Wpf.Toolkit.*.nupkg
+          path: nupkg/LeXtudio.Wpf.Toolkit.*.nupkg
           if-no-files-found: error
 
   publish:
@@ -72,14 +72,14 @@ jobs:
         shell: pwsh
         run: |
           $expected = "$env:GITHUB_REF_NAME".Substring(1)
-          $package = Get-ChildItem nupkg -Filter 'LeXtudio.Xceed.Wpf.Toolkit.*.nupkg' -ErrorAction Stop
-          $version = $package.Name -replace '^LeXtudio\.Xceed\.Wpf\.Toolkit\.(\d+\.\d+\.\d+(\.\d+)?)\.nupkg$', '$1'
+          $package = Get-ChildItem nupkg -Filter 'LeXtudio.Wpf.Toolkit.*.nupkg' -ErrorAction Stop
+          $version = $package.Name -replace '^LeXtudio\.Wpf\.Toolkit\.(\d+\.\d+\.\d+(\.\d+)?)\.nupkg$', '$1'
           if ($version -ne $expected) { throw "Tag $env:GITHUB_REF_NAME does not match $($package.Name) (version $version)." }
       - name: Push package
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $package = Get-ChildItem nupkg -Filter 'LeXtudio.Xceed.Wpf.Toolkit.*.nupkg' -ErrorAction Stop
+          $package = Get-ChildItem nupkg -Filter 'LeXtudio.Wpf.Toolkit.*.nupkg' -ErrorAction Stop
           dotnet nuget push $package.FullName --api-key $env:GITHUB_TOKEN --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
